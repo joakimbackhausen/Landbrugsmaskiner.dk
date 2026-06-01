@@ -1,6 +1,27 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { z } from "zod";
 import { fetchAllMachines, fetchMachineById, fetchCategories } from "./scraper";
+import { machineSlug } from "../shared/machineSlug";
+
+const BASE_URL = "https://www.landbrugsmaskiner.dk";
+
+const staticPages = [
+  { path: "/", changefreq: "weekly", priority: "1.0" },
+  { path: "/firmaprofil", changefreq: "monthly", priority: "0.8" },
+  { path: "/maskiner", changefreq: "daily", priority: "0.9" },
+  { path: "/vaerksted", changefreq: "monthly", priority: "0.7" },
+  { path: "/leverandoerer", changefreq: "monthly", priority: "0.7" },
+  { path: "/administration", changefreq: "monthly", priority: "0.6" },
+  { path: "/kontakt", changefreq: "monthly", priority: "0.7" },
+];
+
+const contactSchema = z.object({
+  name: z.string().min(2, "Navn skal udfyldes"),
+  email: z.string().email("Ugyldig e-mail"),
+  phone: z.string().optional(),
+  message: z.string().min(10, "Besked skal være mindst 10 tegn"),
+});
 
 export async function registerRoutes(
   httpServer: Server,
@@ -39,6 +60,58 @@ export async function registerRoutes(
       res.status(500).json({ error: 'Failed to fetch categories' });
     }
   });
+
+  app.post('/api/contact', async (req, res) => {
+    try {
+      const data = contactSchema.parse(req.body);
+      console.log('[contact]', JSON.stringify({ ...data, at: new Date().toISOString() }));
+
+      const webhookUrl = process.env.CONTACT_WEBHOOK_URL;
+      if (webhookUrl) {
+        await fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            source: 'landbrugsmaskiner.dk',
+            ...data,
+          }),
+        });
+      }
+
+      res.json({ ok: true });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: error.errors[0]?.message || 'Ugyldig forespørgsel' });
+        return;
+      }
+      console.error('Error handling contact:', error);
+      res.status(500).json({ error: 'Kunne ikke sende besked' });
+    }
+  });
+
+  app.get('/robots.txt', (_req, res) => {
+    res.type('text/plain').send(`User-agent: *
+Allow: /
+
+Sitemap: ${BASE_URL}/sitemap.xml
+`);
+  });
+
+  // Gamle WordPress-URL'er med trailing slash
+  for (const path of ['firmaprofil', 'maskiner', 'vaerksted', 'leverandoerer', 'administration', 'kontakt']) {
+    app.get(`/${path}/`, (_req, res) => res.redirect(301, `/${path}`));
+  }
+
+  app.get(/^\/maskiner\/([^/]+)\/$/, (req, res) => {
+    res.redirect(301, `/maskiner/${req.params[0]}`);
+  });
+
+  app.get(/^\/maskine\/(.+)\/$/, (req, res) => {
+    res.redirect(301, `/maskine/${req.params[0]}`);
+  });
+
+  app.get(/^\/om-os\/?$/, (_req, res) => res.redirect(301, '/firmaprofil'));
+  app.get(/^\/(finansiering|reservedele)(\/.*)?\/?$/, (_req, res) => res.redirect(301, '/'));
 
   // Image whitespace detection — fetches image, samples edge pixels
   const imageCheckCache = new Map<string, boolean>();
@@ -115,35 +188,46 @@ export async function registerRoutes(
     }
   });
 
-  // SEO: Dynamic sitemap with all category pages
-  app.get('/sitemap.xml', async (req, res) => {
+  // Sitemap — statiske sider + kategorier og maskiner fra feed
+  app.get('/sitemap.xml', async (_req, res) => {
     try {
-      const categories = await fetchCategories();
-      const baseUrl = 'https://www.landbrugsmaskiner.dk';
+      const [categories, machines] = await Promise.all([
+        fetchCategories(),
+        fetchAllMachines(),
+      ]);
       const today = new Date().toISOString().split('T')[0];
 
       let xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`;
+
+      for (const page of staticPages) {
+        xml += `
   <url>
-    <loc>${baseUrl}/</loc>
+    <loc>${BASE_URL}${page.path}</loc>
     <lastmod>${today}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>${baseUrl}/maskiner</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
+    <changefreq>${page.changefreq}</changefreq>
+    <priority>${page.priority}</priority>
   </url>`;
+      }
 
       for (const cat of categories) {
         xml += `
   <url>
-    <loc>${baseUrl}/maskiner/${cat.slug}</loc>
+    <loc>${BASE_URL}/maskiner/${cat.slug}</loc>
     <lastmod>${today}</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
+  </url>`;
+      }
+
+      for (const machine of machines) {
+        const slug = machineSlug(machine.id, machine.title);
+        xml += `
+  <url>
+    <loc>${BASE_URL}/maskine/${slug}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>`;
       }
 

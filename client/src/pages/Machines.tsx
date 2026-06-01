@@ -5,6 +5,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import SmartImage from '@/components/SmartImage';
 import { machineSlug } from '@/lib/machineSlug';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 interface Category { id: string; tid: string; name: string; }
 interface Machine {
@@ -39,11 +40,13 @@ export default function Machines() {
 
   const selectedCategory = params.kategori || null;
 
-  useEffect(() => {
-    document.title = selectedCategory
-      ? `${selectedCategory} — Landbrugsmaskiner.dk`
-      : 'Maskiner til salg — Landbrugsmaskiner.dk';
-  }, [selectedCategory]);
+  usePageMeta({
+    title: selectedCategory ? `${selectedCategory} — Maskiner til salg` : 'Maskiner til salg',
+    description: selectedCategory
+      ? `Se brugte og nye ${selectedCategory} hos Birkballe & Nicholaisen ApS i Thorsager. Ring 86 37 92 68 for fremvisning.`
+      : 'Stort udvalg af nye og brugte landbrugsmaskiner til salg i Thorsager. Opdateres automatisk fra Maskinbladet.',
+    path: selectedCategory ? `/maskiner/${selectedCategory}` : '/maskiner',
+  });
 
   useEffect(() => {
     (async () => {

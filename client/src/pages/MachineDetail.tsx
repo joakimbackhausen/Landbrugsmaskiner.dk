@@ -7,7 +7,9 @@ import {
 } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { machineIdFromSlug } from '@/lib/machineSlug';
+import { machineIdFromSlug, machineSlug } from '@/lib/machineSlug';
+import { usePageMeta, useJsonLd } from '@/hooks/usePageMeta';
+import { RedirectTo } from '@/components/RouteEffects';
 
 interface Category {
   id: string;
@@ -98,6 +100,31 @@ export default function MachineDetail() {
   const [error, setError] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
+  usePageMeta({
+    title: machine ? `${machine.brand} ${machine.title}` : 'Maskindetaljer',
+    description: machine
+      ? `${machine.brand} ${machine.title}${machine.year ? ` (${machine.year})` : ''} til salg hos Landbrugsmaskiner.dk i Thorsager.`
+      : 'Se maskindetaljer hos Landbrugsmaskiner.dk',
+    path: machine ? `/maskine/${machineSlug(machine.id, machine.title)}` : `/maskine/${params.id}`,
+    image: machine?.pictures?.[0]?.url,
+  });
+
+  useJsonLd('jsonld-product', machine ? {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: machine.title,
+    brand: { '@type': 'Brand', name: machine.brand },
+    description: machine.description?.slice(0, 300) || `${machine.brand} ${machine.title}`,
+    image: machine.pictures?.[0]?.url,
+    offers: {
+      '@type': 'Offer',
+      priceCurrency: machine.currency || 'DKK',
+      price: parseInt(machine.price, 10) || undefined,
+      availability: 'https://schema.org/InStock',
+      seller: { '@type': 'Organization', name: 'Birkballe & Nicholaisen ApS' },
+    },
+  } : null);
+
   useEffect(() => {
     async function fetchMachine() {
       try {
@@ -110,7 +137,6 @@ export default function MachineDetail() {
         const found = data.find((m: Machine) => m.id === machineId);
         if (found) {
           setMachine(found);
-          document.title = `${found.brand} ${found.model} - Landbrugsmaskiner.dk`;
         } else {
           setError('Maskinen blev ikke fundet');
         }
@@ -149,20 +175,9 @@ export default function MachineDetail() {
 
   if (error || !machine) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#f5f5f5]">
-        <Header />
-        <main className="flex-1 flex flex-col items-center justify-center gap-4" style={{ paddingTop: 'var(--header-h, 124px)' }}>
-          <p className="text-xl text-gray-500">{error || 'Maskinen blev ikke fundet'}</p>
-          <Link
-            href="/maskiner"
-            className="inline-flex items-center gap-2 text-[#1a1a1a] font-medium hover:underline"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Tilbage til maskiner
-          </Link>
-        </main>
-        <Footer />
-      </div>
+      <>
+        <RedirectTo to="/maskiner" />
+      </>
     );
   }
 

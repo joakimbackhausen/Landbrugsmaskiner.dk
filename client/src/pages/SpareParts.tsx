@@ -4,6 +4,7 @@ import { Search, X, Phone, Package, ChevronDown, ChevronUp, ArrowUpDown } from '
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { spareParts, sparePartCategories } from '@/data/sparePartsData';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 function formatPrice(price: number): string {
   return price.toLocaleString('da-DK') + ' kr';
@@ -59,12 +60,14 @@ export default function SpareParts() {
 
   const selectedCategory = params.kategori || null;
 
-  useEffect(() => {
-    const cat = sparePartCategories.find(c => c.slug === selectedCategory);
-    document.title = cat
-      ? `${cat.name} — Reservedele — Landbrugsmaskiner.dk`
-      : 'Reservedele & tilbehør — Landbrugsmaskiner.dk';
-  }, [selectedCategory]);
+  const cat = sparePartCategories.find(c => c.slug === selectedCategory);
+  usePageMeta({
+    title: cat ? `${cat.name} — Reservedele` : 'Reservedele & tilbehør',
+    description: cat
+      ? `Reservedele og tilbehør: ${cat.name}. Birkballe & Nicholaisen ApS — stort reservedelslager i Thorsager.`
+      : 'Reservedele og tilbehør til landbrugsmaskiner. Stort og opdateret lager hos Birkballe & Nicholaisen ApS.',
+    path: selectedCategory ? `/reservedele/${selectedCategory}` : '/reservedele',
+  });
 
   const categoriesWithCounts = useMemo(() =>
     sparePartCategories.map(c => ({

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { usePageMeta } from '@/hooks/usePageMeta';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -27,9 +27,12 @@ const features = [
 ];
 
 export default function Finansiering() {
-  useEffect(() => {
-    document.title = 'Finansiering - Landbrugsmaskiner.dk | Leasing af maskiner';
-  }, []);
+  usePageMeta({
+    title: 'Finansiering & leasing',
+    description:
+      'Finansiering og leasing af nye og brugte landbrugsmaskiner. Fleksible vilkår og personlig rådgivning hos Birkballe & Nicholaisen ApS.',
+    path: '/finansiering',
+  });
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
