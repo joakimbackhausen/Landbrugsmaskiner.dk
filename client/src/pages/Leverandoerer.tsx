@@ -66,11 +66,15 @@ export default function Leverandoerer() {
                 }`}
               >
                 <div className={`${i % 2 === 1 ? 'lg:[direction:ltr]' : ''}`}>
-                  <div className="bg-white border border-gray-100 rounded-xl p-10 flex items-center justify-center shadow-sm mb-6 lg:mb-0 aspect-[16/10]">
+                  <div className="bg-white border border-gray-100 rounded-xl p-10 lg:p-12 flex items-center justify-center shadow-sm mb-6 lg:mb-0 aspect-[16/10]">
                     <img
                       src={supplier.logo}
                       alt={supplier.name}
-                      className="max-h-20 w-auto object-contain"
+                      className={
+                        supplier.name === 'Deutz Fahr'
+                          ? 'w-full max-w-[min(100%,420px)] h-auto max-h-28 lg:max-h-36 object-contain'
+                          : 'max-h-24 lg:max-h-32 w-auto object-contain'
+                      }
                     />
                   </div>
                 </div>
@@ -101,9 +105,9 @@ export default function Leverandoerer() {
                 {otherBrandLogos.map((b) => (
                   <div
                     key={b.name}
-                    className="bg-white border border-gray-100 rounded-xl px-8 py-6 flex items-center justify-center min-w-[140px] hover:shadow-md transition-shadow"
+                    className="bg-white border border-gray-100 rounded-xl px-10 py-8 flex items-center justify-center min-w-[160px] hover:shadow-md transition-shadow"
                   >
-                    <img src={b.logo} alt={b.name} className="h-10 w-auto object-contain" />
+                    <img src={b.logo} alt={b.name} className="h-14 lg:h-16 w-auto object-contain" />
                   </div>
                 ))}
               </div>

@@ -145,14 +145,14 @@ export default function Home() {
       <Reveal>
         <section className="py-10 bg-white relative z-20">
           <div className="max-w-[1100px] mx-auto px-5 sm:px-6">
-            <div className="flex flex-wrap items-center justify-center gap-8 lg:gap-14">
+            <div className="flex flex-wrap items-center justify-center gap-10 lg:gap-16">
               {[
-                { src: '/images/brands/deutz-fahr.png', alt: 'Deutz-Fahr' },
-                { src: '/images/brands/poettinger.gif', alt: 'Pöttinger' },
-                { src: '/images/brands/rabe.gif', alt: 'Rabe' },
-                { src: '/images/brands/maschio.jpg', alt: 'Maschio' },
+                { src: '/images/brands/deutz-fahr.png', alt: 'Deutz-Fahr', className: 'h-14 lg:h-[4.5rem] w-auto max-w-[min(100%,280px)] object-contain' },
+                { src: '/images/brands/poettinger.gif', alt: 'Pöttinger', className: 'h-12 lg:h-16 w-auto object-contain' },
+                { src: '/images/brands/rabe.gif', alt: 'Rabe', className: 'h-12 lg:h-16 w-auto object-contain' },
+                { src: '/images/brands/maschio.jpg', alt: 'Maschio', className: 'h-12 lg:h-16 w-auto object-contain' },
               ].map((b) => (
-                <img key={b.alt} src={b.src} alt={b.alt} className="h-8 lg:h-10 w-auto object-contain" />
+                <img key={b.alt} src={b.src} alt={b.alt} className={b.className} />
               ))}
             </div>
           </div>
