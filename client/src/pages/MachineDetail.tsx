@@ -8,7 +8,8 @@ import {
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { machineIdFromSlug, machineSlug } from '@/lib/machineSlug';
-import { usePageMeta, useJsonLd } from '@/hooks/usePageMeta';
+import { usePageSeo } from '@/hooks/usePageMeta';
+import { formatMachineDescription, productSchema } from '@shared/seo';
 import { RedirectTo } from '@/components/RouteEffects';
 
 interface Category {
@@ -100,30 +101,31 @@ export default function MachineDetail() {
   const [error, setError] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  usePageMeta({
-    title: machine ? `${machine.brand} ${machine.title}` : 'Maskindetaljer',
-    description: machine
-      ? `${machine.brand} ${machine.title}${machine.year ? ` (${machine.year})` : ''} til salg hos Landbrugsmaskiner.dk i Thorsager.`
-      : 'Se maskindetaljer hos Landbrugsmaskiner.dk',
-    path: machine ? `/maskine/${machineSlug(machine.id, machine.title)}` : `/maskine/${params.id}`,
-    image: machine?.pictures?.[0]?.url,
-  });
+  const slug = machine ? machineSlug(machine.id, machine.title) : params.id || '';
+  const pageTitle = machine ? `${machine.brand} ${machine.title} til salg` : 'Maskindetaljer';
+  const pageDescription = machine
+    ? formatMachineDescription(machine)
+    : 'Se maskindetaljer hos Landbrugsmaskiner.dk i Thorsager.';
 
-  useJsonLd('jsonld-product', machine ? {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    name: machine.title,
-    brand: { '@type': 'Brand', name: machine.brand },
-    description: machine.description?.slice(0, 300) || `${machine.brand} ${machine.title}`,
-    image: machine.pictures?.[0]?.url,
-    offers: {
-      '@type': 'Offer',
-      priceCurrency: machine.currency || 'DKK',
-      price: parseInt(machine.price, 10) || undefined,
-      availability: 'https://schema.org/InStock',
-      seller: { '@type': 'Organization', name: 'Birkballe & Nicholaisen ApS' },
-    },
-  } : null);
+  usePageSeo({
+    title: pageTitle,
+    description: pageDescription,
+    path: `/maskine/${slug}`,
+    image: machine?.pictures?.[0]?.url,
+    ogType: 'product',
+    keywords: machine
+      ? [machine.brand, machine.title, 'landbrugsmaskine til salg', 'Thorsager', machine.category?.[0]?.name].filter(Boolean) as string[]
+      : undefined,
+    breadcrumbs: [
+      { label: 'Forside', path: '/' },
+      { label: 'Maskiner', path: '/maskiner' },
+      ...(machine
+        ? [{ label: `${machine.brand} ${machine.title}`.trim(), path: `/maskine/${slug}` }]
+        : []),
+    ],
+    jsonLd: machine ? productSchema(machine, slug) : null,
+    jsonLdId: 'jsonld-product',
+  });
 
   useEffect(() => {
     async function fetchMachine() {

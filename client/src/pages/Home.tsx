@@ -8,7 +8,8 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import SmartImage from '@/components/SmartImage';
 import ContactForm from '@/components/ContactForm';
-import { usePageMeta, useJsonLd } from '@/hooks/usePageMeta';
+import { usePageSeo } from '@/hooks/usePageMeta';
+import { homeGraphSchema, pageKeywords } from '@shared/seo';
 import { machineSlug } from '@/lib/machineSlug';
 
 interface Machine {
@@ -52,7 +53,7 @@ const siteSections = [
   { title: 'Maskiner', desc: 'Nye og brugte landbrugsmaskiner', href: '/maskiner', image: '/images/minigraver.jpg' },
   { title: 'Værksted', desc: 'Reparation og service', href: '/vaerksted', image: '/images/vaerksted.jpg' },
   { title: 'Kontakt', desc: 'Ring eller skriv til os', href: '/kontakt', image: '/images/hero2.jpg' },
-  { title: 'Leverandører', desc: 'Deutz-Fahr, Zetor, Maschio m.fl.', href: '/leverandoerer', image: '/images/leverandoerer.jpg' },
+  { title: 'Leverandører', desc: 'Deutz-Fahr, Maschio, Pottinger m.fl.', href: '/leverandoerer', image: '/images/leverandoerer.jpg' },
 ];
 
 const webshopLinks = [
@@ -77,22 +78,14 @@ export default function Home() {
   const [machines, setMachines] = useState<Machine[]>([]);
   const [loading, setLoading] = useState(true);
 
-  usePageMeta({
-    title: 'Landbrugsmaskiner.dk — Kvalitet, Kompetence, Service',
+  usePageSeo({
+    title: 'Nye & brugte landbrugsmaskiner i Thorsager',
     description:
-      'Landbrugsmaskiner.dk — Birkballe & Nicholaisen ApS i Thorsager. Salg af nye og brugte landbrugsmaskiner, værksted og service. Kvalitet - Kompetence - Service.',
+      'Landbrugsmaskiner.dk — Birkballe & Nicholaisen ApS i Thorsager siden 1973. Salg af nye og brugte landbrugsmaskiner, værksted, reservedele og service. Forhandler af Deutz-Fahr, Maschio og Pottinger.',
     path: '/',
-  });
-
-  useJsonLd('jsonld-organization', {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    name: 'Birkballe & Nicholaisen ApS',
-    alternateName: 'Landbrugsmaskiner.dk',
-    url: 'https://www.landbrugsmaskiner.dk',
-    logo: 'https://www.landbrugsmaskiner.dk/images/lm-logo.png',
-    telephone: '+4586379268',
-    email: 'lbb@landbrugsmaskiner.dk',
+    keywords: pageKeywords(['nye landbrugsmaskiner', 'brugte traktorer til salg', 'maskinforhandler Djursland']),
+    jsonLd: homeGraphSchema(),
+    jsonLdId: 'jsonld-home',
   });
 
   useEffect(() => {
@@ -154,13 +147,10 @@ export default function Home() {
           <div className="max-w-[1100px] mx-auto px-5 sm:px-6">
             <div className="flex flex-wrap items-center justify-center gap-8 lg:gap-14">
               {[
-                { src: '/images/brands/deutz-fahr.gif', alt: 'Deutz-Fahr' },
+                { src: '/images/brands/deutz-fahr.png', alt: 'Deutz-Fahr' },
                 { src: '/images/brands/poettinger.gif', alt: 'Pöttinger' },
                 { src: '/images/brands/rabe.gif', alt: 'Rabe' },
-                { src: '/images/brands/sentinel.gif', alt: 'Sentinel' },
-                { src: '/images/brands/zetor.gif', alt: 'Zetor' },
                 { src: '/images/brands/maschio.jpg', alt: 'Maschio' },
-                { src: '/images/brands/volverini.png', alt: 'Volverini' },
               ].map((b) => (
                 <img key={b.alt} src={b.src} alt={b.alt} className="h-8 lg:h-10 w-auto object-contain" />
               ))}
@@ -301,10 +291,10 @@ export default function Home() {
                   med maskiner
                 </h2>
                 <p className="text-[17px] text-gray-500 leading-[1.8] mb-4">
-                  Vi har altid et stort udvalg af brugte landbrugsmaskiner klar til omgående levering. Vi er forhandler af Deutz-Fahr, Zetor, Maschio, Perfect, Suire, Keltec og Murray.
+                  Vi har altid et stort udvalg af brugte landbrugsmaskiner klar til omgående levering. Vi er forhandler af Deutz-Fahr, Maschio, Perfect, Suire, Keltec og Murray.
                 </p>
                 <p className="text-[17px] text-gray-500 leading-[1.8] mb-10">
-                  Vi tilbyder også reparation, reservedele og eksport af brugte maskiner samt import af Pöttinger, Rabe og Volverini. Ring for fremvisning.
+                  Vi tilbyder også reparation, reservedele og eksport af brugte maskiner samt import af Pöttinger og Rabe. Ring for fremvisning.
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <a

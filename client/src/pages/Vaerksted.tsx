@@ -3,7 +3,8 @@ import { Phone, Wrench, GraduationCap, Truck, ArrowRight } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import PageHero from '@/components/PageHero';
-import { usePageMeta } from '@/hooks/usePageMeta';
+import { usePageSeo } from '@/hooks/usePageMeta';
+import { pageKeywords, webPageSchema } from '@shared/seo';
 
 const highlights = [
   {
@@ -24,11 +25,21 @@ const highlights = [
 ];
 
 export default function Vaerksted() {
-  usePageMeta({
-    title: 'Værksted',
-    description:
-      'Birkballe & Nicholaisen værksted i Thorsager: 4 mekanikere og 2 lærlinge. Reparation af landbrugs- og entreprenørmaskiner.',
+  const pageTitle = 'Værksted — reparation af landbrugsmaskiner';
+  const pageDescription =
+    'Værksted hos Birkballe & Nicholaisen i Thorsager med 4 mekanikere og 2 lærlinge. Reparation af traktorer, mejetærskere og entreprenørmaskiner. Hurtig service og servicevogne.';
+
+  usePageSeo({
+    title: pageTitle,
+    description: pageDescription,
     path: '/vaerksted',
+    image: '/images/vaerksted.jpg',
+    keywords: pageKeywords(['værksted landbrugsmaskiner', 'traktor reparation Thorsager', 'servicevogn']),
+    breadcrumbs: [
+      { label: 'Forside', path: '/' },
+      { label: 'Værksted', path: '/vaerksted' },
+    ],
+    jsonLd: webPageSchema(pageTitle, pageDescription, '/vaerksted'),
   });
 
   return (

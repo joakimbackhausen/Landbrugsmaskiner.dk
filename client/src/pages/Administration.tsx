@@ -3,7 +3,8 @@ import { Mail, User, ArrowRight } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import PageHero from '@/components/PageHero';
-import { usePageMeta } from '@/hooks/usePageMeta';
+import { usePageSeo } from '@/hooks/usePageMeta';
+import { pageKeywords, webPageSchema } from '@shared/seo';
 
 const leadership = [
   {
@@ -23,11 +24,20 @@ const leadership = [
 ];
 
 export default function Administration() {
-  usePageMeta({
-    title: 'Administration',
-    description:
-      'Administration hos Birkballe & Nicholaisen ApS. Den daglige ledelse varetages af Leif Birkballe og Michael Nicholaisen.',
+  const pageTitle = 'Administration';
+  const pageDescription =
+    'Administration og daglig ledelse hos Birkballe & Nicholaisen ApS i Thorsager. Kontakt Michael Nicholaisen på mn@landbrugsmaskiner.dk.';
+
+  usePageSeo({
+    title: pageTitle,
+    description: pageDescription,
     path: '/administration',
+    keywords: pageKeywords(['administration', 'ledelse']),
+    breadcrumbs: [
+      { label: 'Forside', path: '/' },
+      { label: 'Administration', path: '/administration' },
+    ],
+    jsonLd: webPageSchema(pageTitle, pageDescription, '/administration'),
   });
 
   return (

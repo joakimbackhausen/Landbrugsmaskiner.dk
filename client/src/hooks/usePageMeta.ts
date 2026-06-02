@@ -1,7 +1,14 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
+import {
+  SEO,
+  absoluteUrl,
+  breadcrumbSchema,
+  type BreadcrumbItem,
+} from '@shared/seo';
 
-const SITE_NAME = 'Landbrugsmaskiner.dk';
-const BASE_URL = 'https://www.landbrugsmaskiner.dk';
+export type { BreadcrumbItem };
+
+type OgType = 'website' | 'product' | 'article';
 
 interface PageMetaOptions {
   title: string;
@@ -9,6 +16,8 @@ interface PageMetaOptions {
   path?: string;
   image?: string;
   noIndex?: boolean;
+  ogType?: OgType;
+  keywords?: string[];
 }
 
 function setMeta(name: string, content: string, property = false) {
@@ -22,42 +31,74 @@ function setMeta(name: string, content: string, property = false) {
   el.content = content;
 }
 
-function setCanonical(href: string) {
-  let el = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+function setLink(rel: string, href: string, hreflang?: string) {
+  const selector = hreflang
+    ? `link[rel="${rel}"][hreflang="${hreflang}"]`
+    : `link[rel="${rel}"]:not([hreflang])`;
+  let el = document.querySelector(selector) as HTMLLinkElement | null;
   if (!el) {
     el = document.createElement('link');
-    el.rel = 'canonical';
+    el.rel = rel;
+    if (hreflang) el.hreflang = hreflang;
     document.head.appendChild(el);
   }
   el.href = href;
 }
 
-export function usePageMeta({ title, description, path = '', image, noIndex }: PageMetaOptions) {
+function setCanonical(href: string) {
+  setLink('canonical', href);
+}
+
+export function usePageMeta({
+  title,
+  description,
+  path = '',
+  image,
+  noIndex,
+  ogType = 'website',
+  keywords,
+}: PageMetaOptions) {
   useEffect(() => {
-    const fullTitle = title.includes(SITE_NAME) ? title : `${title} | ${SITE_NAME}`;
-    const url = `${BASE_URL}${path}`;
-    const ogImage = image ? (image.startsWith('http') ? image : `${BASE_URL}${image}`) : `${BASE_URL}/images/hero.jpg`;
+    const fullTitle = title.includes(SEO.siteName) ? title : `${title} | ${SEO.siteName}`;
+    const url = absoluteUrl(path);
+    const ogImage = image ? absoluteUrl(image) : absoluteUrl(SEO.defaultImage);
 
     document.title = fullTitle;
+    document.documentElement.lang = 'da';
+
     setMeta('description', description);
-    setMeta('robots', noIndex ? 'noindex, nofollow' : 'index, follow');
+    setMeta('keywords', (keywords ?? SEO.defaultKeywords).join(', '));
+    setMeta('author', SEO.company);
+    setMeta('robots', noIndex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1');
+    setMeta('geo.region', 'DK-82');
+    setMeta('geo.placename', 'Thorsager');
+    setMeta('geo.position', `${SEO.geo.latitude};${SEO.geo.longitude}`);
+    setMeta('ICBM', `${SEO.geo.latitude}, ${SEO.geo.longitude}`);
+
     setCanonical(url);
+    setLink('alternate', url, SEO.language);
 
     setMeta('og:title', fullTitle, true);
     setMeta('og:description', description, true);
     setMeta('og:url', url, true);
     setMeta('og:image', ogImage, true);
-    setMeta('og:type', 'website', true);
+    setMeta('og:image:alt', `${SEO.siteName} — ${SEO.tagline}`, true);
+    setMeta('og:type', ogType, true);
+    setMeta('og:locale', SEO.locale, true);
+    setMeta('og:site_name', SEO.siteName, true);
 
+    setMeta('twitter:card', 'summary_large_image');
     setMeta('twitter:title', fullTitle);
     setMeta('twitter:description', description);
     setMeta('twitter:image', ogImage);
-  }, [title, description, path, image, noIndex]);
+  }, [title, description, path, image, noIndex, ogType, keywords]);
 }
 
 export function useJsonLd(id: string, data: Record<string, unknown> | null | undefined) {
+  const serialized = useMemo(() => (data ? JSON.stringify(data) : null), [data]);
+
   useEffect(() => {
-    if (!data || !('@type' in data)) return;
+    if (!serialized) return;
 
     let script = document.getElementById(id) as HTMLScriptElement | null;
     if (!script) {
@@ -66,9 +107,36 @@ export function useJsonLd(id: string, data: Record<string, unknown> | null | und
       script.type = 'application/ld+json';
       document.head.appendChild(script);
     }
-    script.textContent = JSON.stringify(data);
+    script.textContent = serialized;
+
     return () => {
       script?.remove();
     };
-  }, [id, JSON.stringify(data)]);
+  }, [id, serialized]);
 }
+
+export function useBreadcrumbJsonLd(items: BreadcrumbItem[]) {
+  useJsonLd(
+    'jsonld-breadcrumb',
+    items.length > 0 ? breadcrumbSchema(items) : null,
+  );
+}
+
+interface PageSeoOptions extends PageMetaOptions {
+  breadcrumbs?: BreadcrumbItem[];
+  jsonLd?: Record<string, unknown> | null;
+  jsonLdId?: string;
+}
+
+export function usePageSeo({
+  breadcrumbs,
+  jsonLd,
+  jsonLdId = 'jsonld-page',
+  ...meta
+}: PageSeoOptions) {
+  usePageMeta(meta);
+  useBreadcrumbJsonLd(breadcrumbs ?? []);
+  useJsonLd(jsonLdId, jsonLd ?? null);
+}
+
+export { SEO, absoluteUrl };

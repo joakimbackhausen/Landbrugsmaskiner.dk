@@ -6,6 +6,15 @@ import { machineSlug } from "../shared/machineSlug";
 
 const BASE_URL = "https://www.landbrugsmaskiner.dk";
 
+function escapeXml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
 const staticPages = [
   { path: "/", changefreq: "weekly", priority: "1.0" },
   { path: "/firmaprofil", changefreq: "monthly", priority: "0.8" },
@@ -92,6 +101,7 @@ export async function registerRoutes(
   app.get('/robots.txt', (_req, res) => {
     res.type('text/plain').send(`User-agent: *
 Allow: /
+Disallow: /api/
 
 Sitemap: ${BASE_URL}/sitemap.xml
 `);
@@ -198,7 +208,7 @@ Sitemap: ${BASE_URL}/sitemap.xml
       const today = new Date().toISOString().split('T')[0];
 
       let xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`;
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">`;
 
       for (const page of staticPages) {
         xml += `
@@ -222,12 +232,18 @@ Sitemap: ${BASE_URL}/sitemap.xml
 
       for (const machine of machines) {
         const slug = machineSlug(machine.id, machine.title);
+        const imageUrl = machine.pictures?.[0]?.url;
+        const imageTitle = escapeXml(`${machine.brand} ${machine.title}`.trim());
         xml += `
   <url>
     <loc>${BASE_URL}/maskine/${slug}</loc>
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.7</priority>${imageUrl ? `
+    <image:image>
+      <image:loc>${escapeXml(imageUrl)}</image:loc>
+      <image:title>${imageTitle}</image:title>
+    </image:image>` : ''}
   </url>`;
       }
 

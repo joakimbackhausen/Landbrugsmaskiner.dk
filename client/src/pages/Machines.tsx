@@ -5,7 +5,9 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import SmartImage from '@/components/SmartImage';
 import { machineSlug } from '@/lib/machineSlug';
-import { usePageMeta } from '@/hooks/usePageMeta';
+import { usePageSeo } from '@/hooks/usePageMeta';
+import { itemListSchema, pageKeywords, webPageSchema } from '@shared/seo';
+import { compareCategoriesForDisplay, sortMachinesForDisplay } from '@shared/machineSort';
 
 interface Category { id: string; tid: string; name: string; }
 interface Machine {
@@ -28,6 +30,10 @@ function formatPrice(price: string): string {
   return num.toLocaleString('da-DK') + ' kr';
 }
 
+function cleanCategoryName(name?: string) {
+  return name?.replace(/^-+\s*>+\s*/g, '').trim() || undefined;
+}
+
 export default function Machines() {
   const params = useParams<{ kategori?: string }>();
   const [, navigate] = useLocation();
@@ -39,14 +45,6 @@ export default function Machines() {
   const [showBrandDrop, setShowBrandDrop] = useState(false);
 
   const selectedCategory = params.kategori || null;
-
-  usePageMeta({
-    title: selectedCategory ? `${selectedCategory} — Maskiner til salg` : 'Maskiner til salg',
-    description: selectedCategory
-      ? `Se brugte og nye ${selectedCategory} hos Birkballe & Nicholaisen ApS i Thorsager. Ring 86 37 92 68 for fremvisning.`
-      : 'Stort udvalg af nye og brugte landbrugsmaskiner til salg i Thorsager. Opdateres automatisk fra Maskinbladet.',
-    path: selectedCategory ? `/maskiner/${selectedCategory}` : '/maskiner',
-  });
 
   useEffect(() => {
     (async () => {
@@ -68,7 +66,9 @@ export default function Machines() {
         if (e) e.count++; else map.set(cat.id, { name: cat.name, count: 1 });
       }
     });
-    return Array.from(map.entries()).map(([slug, d]) => ({ slug, ...d })).sort((a, b) => b.count - a.count);
+    return Array.from(map.entries())
+      .map(([slug, d]) => ({ slug, ...d }))
+      .sort(compareCategoriesForDisplay);
   }, [machines]);
 
   const brands = useMemo(() => {
@@ -87,7 +87,46 @@ export default function Machines() {
     return true;
   }), [machines, selectedCategory, selectedBrand, searchQuery]);
 
-  const selectedCatName = categories.find(c => c.slug === selectedCategory)?.name;
+  const sortedFiltered = useMemo(
+    () => sortMachinesForDisplay(filtered, { preserveCategoryOrder: !!selectedCategory }),
+    [filtered, selectedCategory],
+  );
+
+  const selectedCatName = cleanCategoryName(categories.find(c => c.slug === selectedCategory)?.name);
+  const pagePath = selectedCategory ? `/maskiner/${selectedCategory}` : '/maskiner';
+  const pageTitle = selectedCatName ? `${selectedCatName} til salg` : 'Maskiner til salg';
+  const pageDescription = selectedCatName
+    ? `Se brugte og nye ${selectedCatName.toLowerCase()} til salg hos Birkballe & Nicholaisen i Thorsager, Djursland. Ring 86 37 92 68 for fremvisning.`
+    : `Stort udvalg af nye og brugte landbrugsmaskiner til salg i Thorsager. Traktorer, mejetærskere og landbrugsredskaber. Opdateres løbende.`;
+
+  usePageSeo({
+    title: pageTitle,
+    description: pageDescription,
+    path: pagePath,
+    keywords: pageKeywords([
+      selectedCatName ?? 'landbrugsmaskiner til salg',
+      'brugte maskiner Thorsager',
+      'maskinudvalg Djursland',
+    ]),
+    breadcrumbs: [
+      { label: 'Forside', path: '/' },
+      { label: 'Maskiner', path: '/maskiner' },
+      ...(selectedCatName && selectedCategory
+        ? [{ label: selectedCatName, path: pagePath }]
+        : []),
+    ],
+    jsonLd: machines.length > 0
+      ? {
+          '@context': 'https://schema.org',
+          '@graph': [
+            webPageSchema(pageTitle, pageDescription, pagePath),
+            itemListSchema(sortedFiltered, pagePath, pageTitle),
+          ],
+        }
+      : webPageSchema(pageTitle, pageDescription, pagePath),
+    jsonLdId: 'jsonld-machines',
+  });
+
   const topCategories = useMemo(() => {
     return categories.map(c => {
       const machine = machines.find(m => m.category?.some(cat => cat.id === c.slug) && m.pictures?.[0]?.url);
@@ -184,7 +223,7 @@ export default function Machines() {
                 </button>
               )}
 
-              <span className="ml-auto text-[14px] text-gray-400">{filtered.length} maskiner</span>
+              <span className="ml-auto text-[14px] text-gray-400">{sortedFiltered.length} maskiner</span>
             </div>
           </div>
       </div>
@@ -197,7 +236,7 @@ export default function Machines() {
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                {filtered.map(machine => (
+                {sortedFiltered.map(machine => (
                   <Link key={machine.id} href={`/maskine/${machineSlug(machine.id, machine.title)}`} className="group block">
                     <div className="bg-white rounded-xl overflow-hidden border border-gray-100 hover:shadow-lg transition-all duration-300">
                       <div className="aspect-[4/3] relative overflow-hidden bg-gray-100">
@@ -226,7 +265,7 @@ export default function Machines() {
                   </Link>
                 ))}
               </div>
-              {filtered.length === 0 && (
+              {sortedFiltered.length === 0 && (
                 <div className="text-center py-20 text-gray-400">
                   <p className="text-[16px]">Ingen maskiner matcher din søgning.</p>
                   <button onClick={() => { navigate('/maskiner'); setSelectedBrand(null); setSearchQuery(''); }}

@@ -3,7 +3,8 @@ import { ArrowRight, Wrench, Truck, Warehouse, Phone, Users } from 'lucide-react
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import PageHero from '@/components/PageHero';
-import { usePageMeta } from '@/hooks/usePageMeta';
+import { usePageSeo } from '@/hooks/usePageMeta';
+import { pageKeywords, webPageSchema } from '@shared/seo';
 
 const ctaCards = [
   {
@@ -20,7 +21,7 @@ const ctaCards = [
   },
   {
     title: 'Eksport & import',
-    description: 'Eksport af brugte maskiner og import af Pöttinger, Rabe, Volverini',
+    description: 'Eksport af brugte maskiner og import af Pöttinger og Rabe',
     href: '/leverandoerer',
     icon: Truck,
   },
@@ -33,11 +34,21 @@ const ctaCards = [
 ];
 
 export default function About() {
-  usePageMeta({
-    title: 'Firmaprofil',
-    description:
-      'Birkballe & Nicholaisen ApS i Thorsager siden 1973. Forhandler af Deutz-Fahr, Zetor, Maschio m.fl. Salg, værksted, reservedele og eksport.',
+  const pageTitle = 'Firmaprofil — Birkballe & Nicholaisen siden 1973';
+  const pageDescription =
+    'Læs om Birkballe & Nicholaisen ApS i Thorsager. Over 50 års erfaring med landbrugsmaskiner, værksted, reservedele og eksport. Forhandler af Deutz-Fahr, Maschio og Pottinger.';
+
+  usePageSeo({
+    title: pageTitle,
+    description: pageDescription,
     path: '/firmaprofil',
+    image: '/images/hero2.jpg',
+    keywords: pageKeywords(['firmaprofil', 'landbrugsforretning Thorsager', 'maskinhandel Djursland']),
+    breadcrumbs: [
+      { label: 'Forside', path: '/' },
+      { label: 'Firmaprofil', path: '/firmaprofil' },
+    ],
+    jsonLd: webPageSchema(pageTitle, pageDescription, '/firmaprofil'),
   });
 
   return (
@@ -71,7 +82,7 @@ export default function About() {
                 </h2>
                 <div className="space-y-5 text-muted-foreground text-[17px] leading-relaxed">
                   <p>
-                    Birkballe & Nicholaisen ApS er et startet firma af Leif Birkballe, Michael Birkballe og Michael Nicholaisen i 2014. Birkballe & Nicholaisen ApS bygger på personer der har været i landbrugsbranchen på og omkring Djursland i mange år. Firmaet har til huse i bygningerne hos Leif Birkballe, hvor Jemith/LBB landbrugsmaskiner i mange år har holdt til.
+                    Birkballe & Nicholaisen ApS blev stiftet i 2014 af Leif Birkballe og Michael Nicholaisen. Medstifter Michael Birkballe er siden udtrådt af selskabet. Birkballe & Nicholaisen ApS bygger på personer der har været i landbrugsbranchen på og omkring Djursland i mange år. Firmaet har til huse i bygningerne hos Leif Birkballe, hvor Jemith/LBB landbrugsmaskiner i mange år har holdt til.
                   </p>
                   <p>
                     Firmaet jemith/LBB landbrugsmaskiner blev grundlagt i 1973 af smedemester Leif Birkballe med reparation af landbrugs- og entreprenørmaskiner. Siden blev der også fabrikeret skovle til gravemaskiner og monteret stålhaller. Fra et lille værksted på 50 m² blev firmaet løbende udvidet så der i dag er mere end 5000 m² lagerhal, kontor, butik, værksted og reservedelslager.
@@ -80,13 +91,13 @@ export default function About() {
                     Den første medarbejder blev ansat i 1975 og siden er flere ansat og udlært så firma i dag har 8 medarbejdere hvoraf mange har snart 30 og 45 års jubilæum i firmaet. Vi lægger stor vægt på efteruddannelse så vi kan yde optimal SERVICE. På værkstedet er der i dag 4 svende og 2 lærlinge.
                   </p>
                   <p>
-                    I løbet af årene er firmaet blevet FORHANDLER af mange kendte mærker bl.a. Deutz-Fahr, Zetor, Maschio, Perfect, Suire, Keltec og Murray.
+                    I løbet af årene er firmaet blevet FORHANDLER af mange kendte mærker bl.a. Deutz-Fahr, Maschio, Perfect, Suire, Keltec og Murray.
                   </p>
                   <p>
-                    Samtidig er aktiviteten også udvidet med omfattende EKSPORT af brugte maskiner og IMPORT af Pöttinger, Rabe og Volverini.
+                    Samtidig er aktiviteten også udvidet med omfattende EKSPORT af brugte maskiner og IMPORT af Pöttinger og Rabe.
                   </p>
                   <p>
-                    Leif Birkballes søn Michael blev udlært i firmaet i 1991 og er nu en drivende kraft i værksted og driftsplanlægning. Michael har også gennem flere år været ansvarlig for salg og produktion af staldinventar, gelændere og terrasser i LBB Produktion.
+                    Leif Birkballes søn Michael Birkballe blev udlært i firmaet i 1991 og var i mange år en drivende kraft i værksted og driftsplanlægning. Han har siden udtrådt af selskabet.
                   </p>
                   <p>
                     Michael Nicholaisen startede som sælger af Landbrugsmaskiner i 2000 og har siden haft med salg og administration og gøre i flere forskellige virksomheder, med tilknytning til landbruget.

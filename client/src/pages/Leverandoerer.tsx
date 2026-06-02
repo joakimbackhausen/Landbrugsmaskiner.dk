@@ -3,12 +3,13 @@ import { ArrowRight } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import PageHero from '@/components/PageHero';
-import { usePageMeta } from '@/hooks/usePageMeta';
+import { usePageSeo } from '@/hooks/usePageMeta';
+import { pageKeywords, webPageSchema } from '@shared/seo';
 
 const suppliers = [
   {
     name: 'Deutz Fahr',
-    logo: '/images/brands/deutz-fahr.gif',
+    logo: '/images/brands/deutz-fahr.png',
     description:
       'Hos Birkballe & Nicholaisen A/S er vi stolte af at arbejde sammen med Deutz Fahr som vores leverandør af landbrugsmaskiner. Med en historie, der går over 150 år tilbage, har Deutz Fahr etableret sig som førende i branchen, kendt for deres innovative design og håndværk af høj kvalitet. Fra høstmaskiner og traktorer til sprøjter og pressere – deres omfattende produktsortiment tilbyder noget til enhver form for landbrugsvirksomhed.',
   },
@@ -22,18 +23,25 @@ const suppliers = [
 
 const otherBrandLogos = [
   { name: 'Rabe', logo: '/images/brands/rabe.gif' },
-  { name: 'Sentinel', logo: '/images/brands/sentinel.gif' },
-  { name: 'Zetor', logo: '/images/brands/zetor.gif' },
   { name: 'Maschio', logo: '/images/brands/maschio.jpg' },
-  { name: 'Volverini', logo: '/images/brands/volverini.png' },
 ];
 
 export default function Leverandoerer() {
-  usePageMeta({
-    title: 'Leverandører',
-    description:
-      'Forhandler af Deutz-Fahr, Zetor, Maschio, Pöttinger, Rabe, Volverini m.fl. Birkballe & Nicholaisen ApS i Thorsager.',
+  const pageTitle = 'Leverandører — Deutz-Fahr, Pottinger, Maschio m.fl.';
+  const pageDescription =
+    'Birkballe & Nicholaisen er forhandler af Deutz-Fahr, Pottinger, Maschio og Rabe. Stort reservedelslager og kvalitetsmaskiner til dansk landbrug.';
+
+  usePageSeo({
+    title: pageTitle,
+    description: pageDescription,
     path: '/leverandoerer',
+    image: '/images/leverandoerer.jpg',
+    keywords: pageKeywords(['Deutz-Fahr forhandler', 'Pottinger', 'Maschio', 'Rabe']),
+    breadcrumbs: [
+      { label: 'Forside', path: '/' },
+      { label: 'Leverandører', path: '/leverandoerer' },
+    ],
+    jsonLd: webPageSchema(pageTitle, pageDescription, '/leverandoerer'),
   });
 
   return (
@@ -45,7 +53,7 @@ export default function Leverandoerer() {
           image="/images/leverandoerer.jpg"
           eyebrow="Kvalitetsmærker"
           title="Leverandører"
-          subtitle="Deutz-Fahr, Zetor, Maschio, Pöttinger, Rabe, Volverini m.fl."
+          subtitle="Deutz-Fahr, Pottinger, Maschio, Rabe m.fl."
         />
 
         <section className="py-20 lg:py-28">

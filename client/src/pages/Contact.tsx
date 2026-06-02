@@ -3,7 +3,8 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import PageHero from '@/components/PageHero';
 import ContactForm from '@/components/ContactForm';
-import { usePageMeta, useJsonLd } from '@/hooks/usePageMeta';
+import { usePageSeo } from '@/hooks/usePageMeta';
+import { localBusinessSchema, pageKeywords, webPageSchema } from '@shared/seo';
 
 const contactDetails = [
   {
@@ -63,37 +64,31 @@ const contacts = [
     tel: '+4528445433',
     email: 'mn@landbrugsmaskiner.dk',
   },
-  {
-    name: 'Michael Birkballe',
-    phone: '28 44 54 34',
-    tel: '+4528445434',
-    email: 'mb@landbrugsmaskiner.dk',
-  },
 ];
 
 export default function Contact() {
-  usePageMeta({
-    title: 'Kontakt',
-    description:
-      'Kontakt Birkballe & Nicholaisen ApS i Thorsager. Tlf: 86 37 92 68. Mørkevej 8, 8410 Thorsager.',
-    path: '/kontakt',
-  });
+  const pageTitle = 'Kontakt — Ring 86 37 92 68';
+  const pageDescription =
+    'Kontakt Birkballe & Nicholaisen ApS på Mørkevej 8, 8410 Thorsager. Telefon 86 37 92 68. Ring for fremvisning af landbrugsmaskiner eller værkstedservice.';
 
-  useJsonLd('jsonld-local-business', {
-    '@context': 'https://schema.org',
-    '@type': 'LocalBusiness',
-    name: 'Birkballe & Nicholaisen ApS',
-    alternateName: 'Landbrugsmaskiner.dk',
-    url: 'https://www.landbrugsmaskiner.dk',
-    telephone: '+4586379268',
-    email: 'lbb@landbrugsmaskiner.dk',
-    address: {
-      '@type': 'PostalAddress',
-      streetAddress: 'Mørkevej 8',
-      addressLocality: 'Thorsager',
-      postalCode: '8410',
-      addressCountry: 'DK',
+  usePageSeo({
+    title: pageTitle,
+    description: pageDescription,
+    path: '/kontakt',
+    image: '/images/hero2.jpg',
+    keywords: pageKeywords(['kontakt landbrugsmaskiner', 'maskinforhandler Thorsager']),
+    breadcrumbs: [
+      { label: 'Forside', path: '/' },
+      { label: 'Kontakt', path: '/kontakt' },
+    ],
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@graph': [
+        localBusinessSchema(),
+        webPageSchema(pageTitle, pageDescription, '/kontakt'),
+      ],
     },
+    jsonLdId: 'jsonld-contact',
   });
 
   return (
