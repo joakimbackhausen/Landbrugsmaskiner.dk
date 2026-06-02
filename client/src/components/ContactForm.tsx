@@ -1,13 +1,49 @@
 import { useState } from 'react';
 import { Send, Loader2, CheckCircle2 } from 'lucide-react';
 
+export interface MachineInquiry {
+  id: number;
+  brand?: string;
+  model?: string;
+  title?: string;
+  price?: string;
+  currency?: string;
+}
+
 interface ContactFormProps {
   className?: string;
   intro?: string;
+  machine?: MachineInquiry;
+  onSuccess?: () => void;
+  submitLabel?: string;
+  idPrefix?: string;
 }
 
-export default function ContactForm({ className = '', intro }: ContactFormProps) {
-  const [form, setForm] = useState({ name: '', email: '', phone: '', message: '' });
+function buildMachineMessage(machine: MachineInquiry): string {
+  const title = [machine.brand, machine.model || machine.title].filter(Boolean).join(' ');
+  const lines = ['Jeg er interesseret i følgende maskine:', ''];
+
+  if (title) lines.push(title);
+
+  if (machine.price && !isNaN(parseInt(machine.price, 10))) {
+    const formatted = parseInt(machine.price, 10).toLocaleString('da-DK');
+    lines.push(`Pris: ${formatted} ${machine.currency || 'DKK'}`);
+  }
+
+  lines.push(`Annonce nr.: ${machine.id}`, '', '');
+  return lines.join('\n');
+}
+
+export default function ContactForm({
+  className = '',
+  intro,
+  machine,
+  onSuccess,
+  submitLabel = 'Send beskeden',
+  idPrefix = 'contact',
+}: ContactFormProps) {
+  const defaultMessage = machine ? buildMachineMessage(machine) : '';
+  const [form, setForm] = useState({ name: '', email: '', phone: '', message: defaultMessage });
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -20,12 +56,16 @@ export default function ContactForm({ className = '', intro }: ContactFormProps)
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          ...(machine ? { machine } : {}),
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Kunne ikke sende besked');
       setStatus('success');
-      setForm({ name: '', email: '', phone: '', message: '' });
+      setForm({ name: '', email: '', phone: '', message: defaultMessage });
+      onSuccess?.();
     } catch (err) {
       setStatus('error');
       setErrorMsg(err instanceof Error ? err.message : 'Der opstod en fejl');
@@ -53,9 +93,9 @@ export default function ContactForm({ className = '', intro }: ContactFormProps)
       {intro && <p className="text-muted-foreground mb-6">{intro}</p>}
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label htmlFor="contact-name" className="block text-sm font-medium mb-1.5">Dit navn</label>
+          <label htmlFor={`${idPrefix}-name`} className="block text-sm font-medium mb-1.5">Dit navn</label>
           <input
-            id="contact-name"
+            id={`${idPrefix}-name`}
             required
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -63,9 +103,9 @@ export default function ContactForm({ className = '', intro }: ContactFormProps)
           />
         </div>
         <div>
-          <label htmlFor="contact-email" className="block text-sm font-medium mb-1.5">Din e-mail</label>
+          <label htmlFor={`${idPrefix}-email`} className="block text-sm font-medium mb-1.5">Din e-mail</label>
           <input
-            id="contact-email"
+            id={`${idPrefix}-email`}
             type="email"
             required
             value={form.email}
@@ -74,9 +114,9 @@ export default function ContactForm({ className = '', intro }: ContactFormProps)
           />
         </div>
         <div>
-          <label htmlFor="contact-phone" className="block text-sm font-medium mb-1.5">Telefonnummer</label>
+          <label htmlFor={`${idPrefix}-phone`} className="block text-sm font-medium mb-1.5">Telefonnummer</label>
           <input
-            id="contact-phone"
+            id={`${idPrefix}-phone`}
             type="tel"
             value={form.phone}
             onChange={(e) => setForm({ ...form, phone: e.target.value })}
@@ -84,9 +124,9 @@ export default function ContactForm({ className = '', intro }: ContactFormProps)
           />
         </div>
         <div>
-          <label htmlFor="contact-message" className="block text-sm font-medium mb-1.5">Din besked</label>
+          <label htmlFor={`${idPrefix}-message`} className="block text-sm font-medium mb-1.5">Din besked</label>
           <textarea
-            id="contact-message"
+            id={`${idPrefix}-message`}
             required
             rows={5}
             value={form.message}
@@ -101,7 +141,7 @@ export default function ContactForm({ className = '', intro }: ContactFormProps)
           className="inline-flex items-center gap-2 bg-[#51af37] text-white px-8 py-3.5 rounded-lg font-semibold hover:bg-[#469e2f] transition-all disabled:opacity-60"
         >
           {status === 'loading' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-          Send beskeden
+          {submitLabel}
         </button>
       </form>
     </div>

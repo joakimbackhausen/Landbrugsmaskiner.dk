@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { z } from "zod";
 import { fetchAllMachines, fetchMachineById, fetchCategories } from "./scraper";
+import { sendContactEmail } from "./email";
 import { machineSlug } from "../shared/machineSlug";
 
 const BASE_URL = "https://www.landbrugsmaskiner.dk";
@@ -30,6 +31,14 @@ const contactSchema = z.object({
   email: z.string().email("Ugyldig e-mail"),
   phone: z.string().optional(),
   message: z.string().min(10, "Besked skal være mindst 10 tegn"),
+  machine: z.object({
+    id: z.number(),
+    brand: z.string().optional(),
+    model: z.string().optional(),
+    title: z.string().optional(),
+    price: z.string().optional(),
+    currency: z.string().optional(),
+  }).optional(),
 });
 
 export async function registerRoutes(
@@ -73,19 +82,7 @@ export async function registerRoutes(
   app.post('/api/contact', async (req, res) => {
     try {
       const data = contactSchema.parse(req.body);
-      console.log('[contact]', JSON.stringify({ ...data, at: new Date().toISOString() }));
-
-      const webhookUrl = process.env.CONTACT_WEBHOOK_URL;
-      if (webhookUrl) {
-        await fetch(webhookUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            source: 'landbrugsmaskiner.dk',
-            ...data,
-          }),
-        });
-      }
+      await sendContactEmail(data);
 
       res.json({ ok: true });
     } catch (error) {

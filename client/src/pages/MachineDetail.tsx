@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'wouter';
 import {
-  Loader2, ArrowLeft, Phone, Mail, ChevronLeft, ChevronRight,
+  Loader2, ArrowLeft, Phone, ChevronLeft, ChevronRight,
   ChevronUp, ChevronDown, Settings, Ruler, Info,
   FileText, Tag, Calendar, Wrench, Gauge, Weight, Box
 } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import MachineInquiryDialog from '@/components/MachineInquiryDialog';
 import { machineIdFromSlug, machineSlug } from '@/lib/machineSlug';
 import { usePageSeo } from '@/hooks/usePageMeta';
 import { formatMachineDescription, productSchema } from '@shared/seo';
@@ -331,15 +332,18 @@ export default function MachineDetail() {
                       Ring: 86 37 92 68
                     </button>
                   </a>
-                  <a
-                    href={`mailto:lbb@landbrugsmaskiner.dk?subject=Forespørgsel: ${machine.brand} ${machine.model} (ID: ${machine.id})&body=Hej,%0D%0A%0D%0AJeg er interesseret i følgende maskine:%0D%0A%0D%0A${machine.brand} ${machine.model}%0D%0APris: ${formatPrice(machine.price)} ${machine.currency}%0D%0AID: ${machine.id}%0D%0A%0D%0AMed venlig hilsen`}
-                    className="flex-1"
-                  >
-                    <button className="w-full inline-flex items-center justify-center gap-2 border-2 border-gray-200 text-[#1a1a1a] text-[14px] font-semibold px-6 py-3 rounded-full hover:bg-gray-50 transition-colors">
-                      <Mail className="w-4 h-4" />
-                      Send email
-                    </button>
-                  </a>
+                  <div className="flex-1">
+                    <MachineInquiryDialog
+                      machine={{
+                        id: machine.id,
+                        brand: machine.brand,
+                        model: machine.model,
+                        title: machine.title,
+                        price: machine.price,
+                        currency: machine.currency,
+                      }}
+                    />
+                  </div>
                 </div>
                 <p className="text-[13px] text-gray-400 mt-4 text-center">
                   Kontaktperson: {machine.contact || 'Leif Birkballe'} · Man-Fre 06:00-16:00
